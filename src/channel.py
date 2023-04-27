@@ -3,58 +3,58 @@ import os
 from googleapiclient.discovery import build
 
 
-API_KEY = os.getenv('YT_API_KEY')
-
-youtube = build('youtube', 'v3', developerKey=API_KEY)
-
-
 class Channel:
     """Класс для ютуб-канала"""
-
+    API_KEY: str = os.getenv('YT_API_KEY')
+    youtube = build('youtube', 'v3', developerKey=API_KEY)
     def __init__(self, channel_id: str) -> None:
         """Экземпляр инициализируется id канала. Дальше все данные будут подтягиваться по API."""
         self.__channel_id = channel_id
-        self.channel = self.youtube.channels().list(id=self.channel_id, part='snippet,statistics').execute()
-        self.title = self.channel[0]['snippet']['title']
 
     def print_info(self) -> None:
         """Выводит в консоль информацию о канале."""
-        self.channel = self.youtube.channels().list(id=self.channel_id, part='snippet,statistics').execute()
-        self.title = self.channel[0]['snippet']['title']
-        self.description = self.channel[0]['snippet']['description']
-        print(f'Информацию о канале {self.channel}')
-        print(f'Информацию о канале {self.title}')
-        print(f'Информацию о канале {self.description}')
+        channel = self.youtube.channels().list(id=self.__channel_id, part='snippet,statistics').execute()
+        return channel
 
+    def to_json(self, filename):
+        channel_dict = {"id": self.__channel_id,
+                        "title": self.title,
+                        "video_count": self.video_count,
+                        "url": self.url,
+                        "description": self.description
+                        }
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(channel_dict, f, indent=2, ensure_ascii=False)
 
     @classmethod
     def get_service(cls):
-        """"""
-        return
-        pass
+        return build('youtube', 'v3', developerKey=cls.API_KEY)
 
-    def to_json(dict_to_print: dict):
-        """"""
-        print(json.dump(dict_to_print, indent=2, ensure_ascii=False))
-        # state = {}
-        # state['title'] = self.title
-        # state['description'] = self.description
-        # state['url'] = self.url
-        # state['subscriber_count'] = self.subscriber_count
-        # state['video_count'] = self.video_count
-        # state['view_count'] = self.view_count
+    @property
+    def title(self):
+        return self.print_info()["items"][0]["snippet"]["title"]
 
-        # with open("file.json", "wb") as f:
-        #   pickle.dump(self.state, f)
+    @property
+    def description(self):
+        return self.print_info()["items"][0]["snippet"]["description"]
+
+    @property
+    def url(self):
+        return f'https://www.youtube.com/channel/{self.__channel_id}'
+
+    @property
+    def subs(self):
+        return self.print_info()["items"][0]["statistics"]["subscriberCount"]
+
+    @property
+    def video_count(self):
+        return self.print_info()["items"][0]["statistics"]["videoCount"]
+
+    @property
+    def viewers(self):
+        return self.print_info()["items"][0]["statistics"]["viewCount"]
 
     @property
     def channel_id(self):
         return self.__channel_id
 
-    @channel_id.setter
-    def channel_id(self,chanell_id):
-        pass
-
-# print(f'Информацию о канале {self.channel}')
-# print(f'Информацию о канале {self.title}')
-# print(f'Информацию о канале {self.description}')
